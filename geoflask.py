@@ -1,10 +1,10 @@
-'''
+"""
 geoFlask
-'''
+"""
 
 import os
 import json
-import time
+import socket
 
 from ratelimit import ratelimit, get_view_rate_limit
 
@@ -30,20 +30,26 @@ def load_config(cfg=None):
         config = json.load(f)
     return config
 
+config = load_config()
+
 
 @app.route('/')
 def index():
-    return jsonify({'success': True})
+    return jsonify({'hello': 'there'})
 
 
 @app.route('/ip/<string:ip>')
 @app.route('/ip/', defaults={'ip': None})
-@ratelimit(limit=10, per=60)
+@ratelimit(limit=config['rate_limit'], per=config['rate_limit_timeframe'])
 def ip(ip):
     if ip is None:
         ip = request.remote_addr
 
-    config = load_config()
+    try:
+        socket.inet_aton(ip)
+    except:
+        return 'Not an IP', 400
+
     key = '%s/%s/' % (config['redis_lookup_prefix'], ip)
 
     c = redis.get(key)
@@ -72,8 +78,6 @@ def after_request(response):
 
 
 def main():
-    config = load_config()
-
     app.run(config['address'], port=config['port'], debug=config['debug'])
 
 
