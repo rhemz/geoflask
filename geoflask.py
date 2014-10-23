@@ -43,7 +43,10 @@ def index():
 @ratelimit(limit=config['rate_limit'], per=config['rate_limit_timeframe'])
 def ip(ip):
     if ip is None:
-        ip = request.remote_addr
+        if not request.headers.getlist("X-Forwarded-For"):
+            ip = request.remote_addr
+        else:
+            ip = request.headers.getlist("X-Forwarded-For")[0]
 
     try:
         socket.inet_aton(ip)
