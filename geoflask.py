@@ -32,14 +32,8 @@ def load_config(cfg=None):
 
 config = load_config()
 
-
-@app.route('/')
-def index():
-    return jsonify({'hello': 'there'})
-
-
-@app.route('/ip/<string:ip>')
-@app.route('/ip/', defaults={'ip': None})
+@app.route('/', defaults={'ip': None})
+@app.route('/<string:ip>')
 @ratelimit(limit=config['rate_limit'], per=config['rate_limit_timeframe'])
 def ip(ip):
     if ip is None:
